@@ -21,6 +21,7 @@ You can download following models:
 
 The LR images were downsampled and resized to 100x100 with imresize() function in Matlab.  Append "x2-x8" to the filename and put LR images in the same dir. The HR and LR dataset path should be like this:
 
+<pre>
 **+--RAFDB_train_lr**
 |-- minitest
 |   |-- Angry
@@ -53,15 +54,17 @@ The LR images were downsampled and resized to 100x100 with imresize() function i
 |   |-- Neutral
 |   |-- Sad
 |   \`-- Surprise
+</pre>
 
 
 
 ## Train and Test
 Use train.sh to train the FSRFER model and load the trained model with classify.sh to train the classifier and classify features. 
 
+<pre>
 |-- classify
 |   |-- classify.sh                    
-|   |-- classify_FER.py            (train and test the FER classifier)
+|   |-- classify_FER.py         (train and test the FER classifier)
 |   |-- classify_FSRFER.py      (train and test the FSRFER classifier)
 |   \`-- framework.py
 |-- data
@@ -73,5 +76,6 @@ Use train.sh to train the FSRFER model and load the trained model with classify.
 |   |-- train_module_full.py
 |   \`-- utils.py
 |-- nohup.out
-|-- train.py                              (train the FSRFER feature extractor)
+|-- train.py                    (train the FSRFER feature extractor)
 \`-- train.sh
+</pre>
