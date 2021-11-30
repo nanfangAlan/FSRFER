@@ -121,7 +121,6 @@ def main(args):
                 arr=[]
                 for i in range(len(best_class_indices)):
                     arr.append((paths[i], predictions[i],best_class_indices[i],labels[i]))
-                # pickle.dump(arr, open('classification_data.p','w'))
                 accuracy = 100*np.mean(np.equal(best_class_indices, labels))
                 print('Total Accuracy: %.3f' % accuracy)
 

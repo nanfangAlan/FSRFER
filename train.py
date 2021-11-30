@@ -18,20 +18,22 @@ def set_flags():
     Flags = tf.app.flags
 
     # About data
-    Flags.DEFINE_string('data_dir', '/opt/FSRFER/data/RAFDB/RAFDB_100_bicubicup/RAFDB_100_lowx1/minitest', 'data directory')
-    Flags.DEFINE_string('lr_data_dir', '/opt/FSRFER/data/RAFDB/RAFDB_100_bicubicup/RAFDB_100_lowx1/minitest', 'lr data directory')
+    Flags.DEFINE_string('data_dir', '/data/RAFDB/RAFDB_100/train_100', 'data directory')
+    Flags.DEFINE_string('lr_data_dir', '/data/RAFDB/RAFDB_100_multiscale_upto100_full/train_100', 'lr data directory')
     Flags.DEFINE_string('npz_data_dir', './data/npz', 'The npz data dir')
     Flags.DEFINE_string('HR_npz_filename', 'HR_image_multiscale_whiten.npz', 'the filename of HR image npz file')
     Flags.DEFINE_string('LR_npz_filename', 'LR_image_multiscale_whiten.npz', 'the filename of LR image npz file')
     Flags.DEFINE_string('Label_npz_filename', 'Label.npz', 'the filename of Label npz file')
     Flags.DEFINE_boolean('save_data', True, 'Whether to load and save data as npz file')
-    Flags.DEFINE_string('train_result_dir', './', 'output directory during training')
+    Flags.DEFINE_string('train_result_dir', 'opt/FSRFER/train_result_dir', 'output directory during training')
     Flags.DEFINE_boolean('crop', False, 'Whether image cropping is enabled')
     Flags.DEFINE_integer('crop_size', 128, 'the size of crop of training HR images')
     Flags.DEFINE_integer('num_crop_per_image', 2, 'the number of random-cropped images per image')
     Flags.DEFINE_boolean('data_augmentation', True, 'whether to augment data')
 
     # About Network
+    Flags.DEFINE_string('fer_model_checkpoint_dir', '/opt/FSRFER/checkpoint/models/model2/20170815-144407', 'fer_model pre-train checkpoint directory')
+    Flags.DEFINE_string('pre_train_checkpoint_dir', '/opt/FSRFER/checkpoint/WGAN_div/2021-1127T0912', 'pre-train checkpoint directory')
     Flags.DEFINE_integer('scale_SR', 4, 'the scale of super-resolution')
     Flags.DEFINE_integer('num_repeat_RRDB', 6, 'The number of repeats of RRDB blocks')
     Flags.DEFINE_float('residual_scaling', 0.2, 'residual scaling parameter')
@@ -42,10 +44,10 @@ def set_flags():
     # About training
     Flags.DEFINE_integer('num_iter', 1000000, 'The number of iterations')
     Flags.DEFINE_integer('pre_iter', 40000, 'The number of iterations')
-    Flags.DEFINE_integer('batch_size', 4, 'Mini-batch size')
+    Flags.DEFINE_integer('batch_size', 32, 'Mini-batch size')
     Flags.DEFINE_integer('channel', 3, 'Number of input/output image channel')
     Flags.DEFINE_integer('feature_channel', 1, 'Number of feature channel')
-    Flags.DEFINE_boolean('pretrain_generator', False, 'Whether to pretrain generator')
+    Flags.DEFINE_boolean('pretrain_generator', True, 'Whether to pretrain generator')
     Flags.DEFINE_float('pretrain_learning_rate', 2e-4, 'learning rate for pretrain')
     Flags.DEFINE_float('pretrain_lr_decay_step', 20000, 'decay by every n iteration')
     Flags.DEFINE_float('learning_rate', 2e-5, 'learning rate')
@@ -65,14 +67,13 @@ def set_flags():
     # About log
     Flags.DEFINE_boolean('logging', True, 'whether to record training log')
     Flags.DEFINE_integer('train_sample_save_freq', 100, 'save samples during training every n iteration')
-    Flags.DEFINE_integer('train_ckpt_save_freq', 1000, 'save checkpoint during training every n iteration')
+    Flags.DEFINE_integer('train_ckpt_save_freq', 100, 'save checkpoint during training every n iteration')
     Flags.DEFINE_integer('train_summary_save_freq', 100, 'save summary during training every n iteration')
-    Flags.DEFINE_string('pre_train_checkpoint_dir', '/opt/FSRFER/checkpoint/WGAN_div/2020-05-20T15-57-02-RAFDB305k-img', 'pre-train checkpoint directory')
-    Flags.DEFINE_string('checkpoint_dir', './checkpoint/WGAN_div', 'checkpoint directory')
-    Flags.DEFINE_string('logdir', './log/WGAN_div', 'log directory')
+    Flags.DEFINE_string('checkpoint_dir', '/opt/FSRFER/checkpoint/WGAN_div', 'checkpoint directory')
+    Flags.DEFINE_string('logdir', '/opt/FSRFER/log/WGAN_div', 'log directory')
 
     # About GPU setting
-    Flags.DEFINE_string('gpu_dev_num', '1', 'Which GPU to use for multi-GPUs.')
+    Flags.DEFINE_string('gpu_dev_num', '0,1', 'Which GPU to use for multi-GPUs.')
 
     return Flags.FLAGS
 
@@ -91,11 +92,17 @@ def set_logger(FLAGS):
 
 
 def main():
+    # set timestamp
+    TIMESTAMP = "{0:%Y-%m%dT%H%M}".format(datetime.now())
+
     # set flag
     FLAGS = set_flags()
 
+    # set GPU
+    os.environ["CUDA_VISIBLE_DEVICES"] = FLAGS.gpu_dev_num
+
     # make dirs
-    target_dirs = [FLAGS.pre_train_checkpoint_dir, FLAGS.checkpoint_dir, FLAGS.logdir]
+    target_dirs = [FLAGS.checkpoint_dir, FLAGS.logdir]
     create_dirs(target_dirs)
 
     # set logger
@@ -116,7 +123,9 @@ def main():
 
     # pre-train generator with pixel-wise loss and save the trained model
     if FLAGS.pretrain_generator:
-        train_pretrain_generator(FLAGS, LR_train, HR_train, logflag)
+        pre_gen_dir =  os.path.join(FLAGS.checkpoint_dir + '/'  + TIMESTAMP ,'pre_gen/pre_gen')
+        os.makedirs(pre_gen_dir)
+        train_pretrain_generator(FLAGS, LR_train, HR_train, logflag, pre_gen_dir=pre_gen_dir)
         tf.reset_default_graph()
         gc.collect()
     # else:
@@ -176,15 +185,16 @@ def main():
         log(logflag, 'Training FSRFER starts', 'info')
 
         sess.run(tf.global_variables_initializer())
-        sess.run(load_model('/opt/FSRFER/fer_model/RAFDB&SFEW/20170815-144407'))
+        sess.run(load_model(FLAGS.fer_model_checkpoint_dir))
         sess.run(global_iter.initializer)
 
-        TIMESTAMP = "{0:%Y-%m-%dT%H-%M-%S/}".format(datetime.now())
-        writer = tf.summary.FileWriter(FLAGS.logdir + '/' + TIMESTAMP, graph=sess.graph)
+
+        writer = tf.summary.FileWriter(FLAGS.logdir + '/' + TIMESTAMP + '/', graph=sess.graph)
         gen_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='generator')
         dis_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='discriminator')
-        pre_saver = tf.train.Saver(var_list=gen_list + dis_list)
-        pre_saver.restore(sess, tf.train.latest_checkpoint(FLAGS.pre_train_checkpoint_dir))
+        if FLAGS.pre_train_checkpoint_dir != '':
+            pre_saver = tf.train.Saver(var_list=gen_list + dis_list)
+            pre_saver.restore(sess, tf.train.latest_checkpoint(FLAGS.pre_train_checkpoint_dir))
 
         if FLAGS.perceptual_loss == 'VGG19':
             sess.run(load_vgg19_weight(FLAGS))
@@ -221,7 +231,11 @@ def main():
                                                                                                            ),
                         'info')
                 if current_iter % FLAGS.train_ckpt_save_freq == 0:
-                    saver.save(sess, os.path.join(FLAGS.checkpoint_dir+ '/' + TIMESTAMP, 'gen'), global_step=current_iter)
+                    save_path = FLAGS.checkpoint_dir + '/' + TIMESTAMP  + '/FSRFER'
+                    if current_iter != 0:
+                        saver.save(sess, save_path, global_step=current_iter, write_meta_graph=False)
+                    else:
+                        saver.save(sess, save_path, global_step=current_iter)
 
         writer.close()
         log(logflag, 'Training FSRFER end', 'info')

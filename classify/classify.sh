@@ -21,10 +21,15 @@
 #classify with FSR-FER
 ##FSRFER
 #train
-python3 classify_FSRFER.py TRAIN /opt/FSRFER/data/RAFDB/RAFDB_100/test_100 "/opt/FSRFER/checkpoint/WGAN_div/2021-04-26T22-11-20-load-pre-classimg144k-img" "/opt/FSRFER/checkpoint/WGAN_div/2021-04-26T22-11-20-load-pre-classimg144k-img/svc.pkl" --batch_size=32 --image_size=100
+#python3 classify_FSRFER.py TRAIN /opt/FSRFER/data/RAFDB/RAFDB_100/train_100 "/opt/FSRFER/checkpoint/WGAN_div/2021-04-26T22-11-20-load-pre-classimg144k-img" "/opt/FSRFER/checkpoint/WGAN_div/2021-04-26T22-11-20-load-pre-classimg144k-img/svc_test.pkl" --batch_size=32 --image_size=100
 
 
 #classify
 #python3 classify_FSRFER.py CLASSIFY /opt/FSRFER/data/RAFDB/RAFDB_100/test_100 "/opt/FSRFER/checkpoint/WGAN_div/2021-04-26T22-11-20-load-pre-classimg144k-img" "/opt/FSRFER/checkpoint/WGAN_div/2021-04-26T22-11-20-load-pre-classimg144k-img/svc.pkl" --batch_size=32 --image_size=100
+#python3 classify_FSRFER.py TRAIN /opt/FSRFER/data/RAFDB/RAFDB_100_bicubicup/RAFDB_100_lowx1/train "/opt/FSRFER/checkpoint/WGAN_div/2021-10-07T22-39-38" "/opt/FSRFER/checkpoint/WGAN_div/2021-10-07T22-39-38/svc.pkl" --batch_size=32 --image_size=100
+#python3 classify_FSRFER.py TRAIN /opt/FSRFER/data/RAFDB/RAFDB_100_multiscale_upto100_full/train_100 "/opt/FSRFER/checkpoint/WGAN_div/2021-10-07T22-39-38" "/opt/FSRFER/checkpoint/WGAN_div/2021-10-07T22-39-38/svc.pkl" --batch_size=32 --image_size=100
+
+#python3 classify_FSRFER.py TRAIN /opt/FSRFER/data/RAFDB/RAFDB_100_multiscale_upto100_full/train_100 "/opt/FSRFER/checkpoint/WGAN_div/2021-1127T0912" "/opt/FSRFER/checkpoint/WGAN_div/2021-1127T0912/svc.pkl" --batch_size=32 --image_size=100
+python3 classify_FSRFER.py CLASSIFY /opt/FSRFER/data/RAFDB/RAFDB_100_bicubicup/RAFDB_100_lowx1/test "/opt/FSRFER/checkpoint/WGAN_div/2021-1127T0912" "/opt/FSRFER/checkpoint/WGAN_div/2021-1127T0912/svc.pkl" --batch_size=32 --image_size=100
 
 

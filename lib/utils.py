@@ -181,8 +181,8 @@ def load_and_save_data(FLAGS, logflag):
                 for image_path in image_paths:
                     HR_image = misc.imread(image_path)
                     HR_image = prewhiten(HR_image)
-                    ret_HR_image.append(HR_image)
-                    ret_label.append(i)
+                    ret_HR_image.extend([HR_image] * 7)
+                    ret_label.extend([i] * 7)
 
     for path in lr_paths.split(':'):
         path_exp = os.path.expanduser(path)
@@ -199,14 +199,14 @@ def load_and_save_data(FLAGS, logflag):
                 image_paths = [os.path.join(facedir, img) for img in images]
                 for image_path in image_paths:
                     LR_image = misc.imread(image_path)
-
                     LR_image = prewhiten(LR_image)
-                    ret_LR_image.append(LR_image)
-                    lr_ret_label.append(i)
+                    ret_LR_image.extend([LR_image])
+                    lr_ret_label.extend([i])
 
     ret_HR_image = np.array(ret_HR_image)
     ret_LR_image = np.array(ret_LR_image)
     ret_label = np.array(ret_label)
+    lr_ret_label = np.array(lr_ret_label)
     print(ret_HR_image.shape)
     print(ret_LR_image.shape)
     assert ret_HR_image.shape == ret_LR_image.shape , 'LR images number is not equal to HR images!'

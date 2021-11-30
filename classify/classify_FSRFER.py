@@ -42,36 +42,24 @@ import scipy.misc as misc
 def get_model_filenames(model_dir):
     files = os.listdir(model_dir)
     meta_files = [s for s in files if s.endswith('.meta')]
-    # if len(meta_files)==0:
-    #     raise ValueError('No meta file found in the model directory (%s)' % model_dir)
-    # elif len(meta_files)>1:
-    #     raise ValueError('There should not be more than one meta file in the model directory (%s)' % model_dir)
+    if len(meta_files)==0:
+        raise ValueError('No meta file found in the model directory (%s)' % model_dir)
+    elif len(meta_files)>1:
+        raise ValueError('There should not be more than one meta file in the model directory (%s)' % model_dir)
     meta_file = meta_files[0]
     ckpt_file = tf.train.latest_checkpoint(model_dir)
-    #print(ckpt_file)
     return meta_file, ckpt_file
 
 def load_model(model):
     # Check if the model is a model directory (containing a metagraph and a checkpoint file)
     #  or if it is a protobuf file with a frozen graph
     model_exp = os.path.expanduser(model)
-    if (os.path.isfile(model_exp)):
-        print('Model filename: %s' % model_exp)
-        with gfile.FastGFile(model_exp, 'rb') as f:
-            graph_def = tf.GraphDef()
-            graph_def.ParseFromString(f.read())
-            tf.import_graph_def(graph_def, name='')
-    else:
-        print('Model directory: %s' % model_exp)
-        # meta_file为meta文件的地址pyth
-        # ckpt=如今的index+data-00000-of-00001
-        meta_file, ckpt_file = get_model_filenames(model_exp)
-
-        print('Metagraph file: %s' % meta_file)
-        print('Checkpoint file: %s' % ckpt_file)
-
-        saver = tf.train.import_meta_graph(os.path.join(model_exp, meta_file))
-        return saver.restore(tf.get_default_session(), tf.train.latest_checkpoint(model))
+    print('Model directory: %s' % model_exp)
+    meta_file, ckpt_file = get_model_filenames(model_exp)
+    print('Metagraph file: %s' % meta_file)
+    print('Checkpoint file: %s' % ckpt_file)
+    saver = tf.train.import_meta_graph(os.path.join(model_exp, meta_file))
+    return saver.restore(tf.get_default_session(), tf.train.latest_checkpoint(model))
 
 def main(args):
     with tf.Graph().as_default():
@@ -103,23 +91,13 @@ def main(args):
             # Load the model
             print('Loading feature extraction model')
             load_model(args.model)
-            #print([n.name for n in tf.get_default_graph().as_graph_def().node if n.name[:7]=='DLP-CNN'])
-
 
             # Get input and output tensors
             images_placeholder_LR = tf.get_default_graph().get_tensor_by_name("LR_input:0")
 
-            #images_placeholder_HR = tf.get_default_graph().get_tensor_by_name("HR_input:0")
-
-            # images_placeholder_normal = tf.get_default_graph().get_tensor_by_name("input:0")
-            # phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-
-            #embeddings = tf.get_default_graph().get_tensor_by_name("embeddings_real:0")
-            #embeddings = tf.get_default_graph().get_tensor_by_name("embeddings_fake:0")没有这一行，因为embeddings_fake就叫embeddings
             embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
             embedding_size = embeddings.get_shape()[1]
-            #phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-            # Run forward pass to calculate embeddings
+
             print('Calculating features for images')
             nrof_images = len(paths)
             nrof_batches_per_epoch = int(math.ceil(1.0 * nrof_images / args.batch_size))
@@ -132,7 +110,6 @@ def main(args):
                     paths_batch.extend(paths[0:(args.batch_size - (end_index - start_index))])
                 images = framework.load_data(paths_batch, False, False, args.image_size)
                 feed_dict = {images_placeholder_LR: images}
-                # feed_dict = {images_placeholder_normal: images,phase_train_placeholder: False}
                 arr = sess.run(embeddings, feed_dict=feed_dict)
                 if (end_index - start_index) != args.batch_size:
                     arr = arr[0:end_index - start_index]
@@ -166,7 +143,6 @@ def main(args):
                 arr = []
                 for i in range(len(best_class_indices)):
                     arr.append((paths[i], predictions[i], best_class_indices[i], labels[i],emb_array[i]))
-                    #print(predictions[i], best_class_indices[i], labels[i],emb_array[i])
                 pickle.dump(arr, open('classification_data.p', 'wb'))
                 accuracy = 100 * np.mean(np.equal(best_class_indices, labels))
                 print('Total Accuracy: %.3f' % accuracy)

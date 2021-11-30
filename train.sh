@@ -1,1 +1,1 @@
-python3.5 train.py
+python3.5 train.py --data_dir /opt/FSRFER/data/RAFDB/RAFDB_100/train_100 --lr_data_dir /opt/FSRFER/data/RAFDB/RAFDB_100_multiscale_upto100_full/train_100 --checkpoint_dir /opt/FSRFER/checkpoint/WGAN_div

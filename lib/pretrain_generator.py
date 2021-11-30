@@ -6,15 +6,15 @@ from sklearn.utils import shuffle
 import tensorflow as tf
 
 from lib.ops import scale_initialization
-from lib.train_module import Network, Loss, Optimizer
+from lib.train_module_full import Network, Loss, Optimizer
 from lib.utils import log, normalize_images, save_image, load_model
 
 
 from lib.covpoolnet import inference, inference_middle
 
-def train_pretrain_generator(FLAGS, LR_train, HR_train, logflag):
+def train_pretrain_generator(FLAGS, LR_train, HR_train, logflag, pre_gen_dir):
     """pre-train deep network as initialization weights of ESRGAN Generator"""
-    log(logflag, 'Pre-train : Process start', 'info')
+    log(logflag, 'Pre-train : Proce ss start', 'info')
 
     LR_data = tf.placeholder(tf.float32, shape=[None, FLAGS.LR_image_size, FLAGS.LR_image_size, FLAGS.channel],
                              name='LR_input')
@@ -59,7 +59,7 @@ def train_pretrain_generator(FLAGS, LR_train, HR_train, logflag):
         log(logflag, 'Pre-train : Training starts', 'info')
 
         sess.run(tf.global_variables_initializer())
-        sess.run(load_model(FLAGS.fer_model))
+        sess.run(load_model(FLAGS.fer_model_checkpoint_dir))
         sess.run(global_iter.initializer)
         sess.run(scale_initialization(pre_gen_var, FLAGS))
 
@@ -88,14 +88,17 @@ def train_pretrain_generator(FLAGS, LR_train, HR_train, logflag):
                     writer.add_summary(result['summary'], global_step=current_iter)
 
                 # save samples every n iter
-                if current_iter % 300 == 0:
+                if current_iter % FLAGS.train_sample_save_freq == 0:
                     log(logflag,
                         'Pre-train iteration : {0}, pixel-wise_loss : {1}'.format(current_iter, result['pre_gen_loss']),
                         'info')
 
                 # save checkpoint
                 if current_iter % FLAGS.train_ckpt_save_freq == 0:
-                    saver.save(sess, os.path.join(FLAGS.pre_train_checkpoint_dir, 'pre_gen'), global_step=current_iter)
+                    if current_iter != 0:
+                        saver.save(sess, pre_gen_dir, global_step=current_iter, write_meta_graph=False)
+                    else:
+                        saver.save(sess, pre_gen_dir, global_step=current_iter)
 
         writer.close()
         log(logflag, 'Pre-train : Process end', 'info')
