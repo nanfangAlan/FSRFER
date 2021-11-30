@@ -25,15 +25,15 @@ def set_flags():
     Flags.DEFINE_string('LR_npz_filename', 'LR_image_multiscale_whiten.npz', 'the filename of LR image npz file')
     Flags.DEFINE_string('Label_npz_filename', 'Label.npz', 'the filename of Label npz file')
     Flags.DEFINE_boolean('save_data', True, 'Whether to load and save data as npz file')
-    Flags.DEFINE_string('train_result_dir', 'opt/FSRFER/train_result_dir', 'output directory during training')
+    Flags.DEFINE_string('train_result_dir', './train_result_dir', 'output directory during training')
     Flags.DEFINE_boolean('crop', False, 'Whether image cropping is enabled')
     Flags.DEFINE_integer('crop_size', 128, 'the size of crop of training HR images')
     Flags.DEFINE_integer('num_crop_per_image', 2, 'the number of random-cropped images per image')
     Flags.DEFINE_boolean('data_augmentation', True, 'whether to augment data')
 
     # About Network
-    Flags.DEFINE_string('fer_model_checkpoint_dir', '/opt/FSRFER/checkpoint/models/model2/20170815-144407', 'fer_model pre-train checkpoint directory')
-    Flags.DEFINE_string('pre_train_checkpoint_dir', '/opt/FSRFER/checkpoint/WGAN_div/2021-1127T0912', 'pre-train checkpoint directory')
+    Flags.DEFINE_string('fer_model_checkpoint_dir', './models/model2/20170815-144407', 'fer_model pre-train checkpoint directory')
+    Flags.DEFINE_string('pre_train_checkpoint_dir', '', 'pre-train checkpoint directory')
     Flags.DEFINE_integer('scale_SR', 4, 'the scale of super-resolution')
     Flags.DEFINE_integer('num_repeat_RRDB', 6, 'The number of repeats of RRDB blocks')
     Flags.DEFINE_float('residual_scaling', 0.2, 'residual scaling parameter')
